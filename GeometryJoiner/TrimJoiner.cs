@@ -1,7 +1,9 @@
 ﻿using BaseClasses;
 using HostMgd.EditorInput;
+using System.Drawing;
 using System.Reflection;
 using System.Runtime.ConstrainedExecution;
+using System.Security.Cryptography;
 using Teigha.DatabaseServices;
 using Teigha.Geometry;
 using Teigha.Runtime;
@@ -35,26 +37,41 @@ namespace GeometryJoiner
 
             using (Transaction transaction = nanoDatabase.TransactionManager.StartTransaction())
             {
-                for (int i = 0; i < selectedObjects.Count - 1; i++)
+                foreach (SelectedObject s1 in selectedObjects)
                 {
-                    for(int j = i + 1; j < selectedObjects.Count; j++)
+                    foreach (SelectedObject s2 in selectedObjects)
                     {
-                        ObjectId curveId = selectedObjects[i].ObjectId;
-                        ObjectId curve2Id = selectedObjects[j].ObjectId;
+                        if (s1 != s2)
+                        {
+                            ObjectId curveId = s1.ObjectId;
+                            ObjectId curve2Id = s2.ObjectId;
 
-                        Curve? curve = transaction.GetObject(curveId, OpenMode.ForRead) as Curve;
-                        Curve? curve2 = transaction.GetObject(curve2Id, OpenMode.ForRead) as Curve;
+                            Curve? curve = transaction.GetObject(curveId, OpenMode.ForRead) as Curve;
+                            Curve? curve2 = transaction.GetObject(curve2Id, OpenMode.ForRead) as Curve;
 
-
-                        curve?.IntersectWith(curve2, Intersect.OnBothOperands, points, IntPtr.Zero, IntPtr.Zero);
+                            curve?.IntersectWith(curve2, Intersect.OnBothOperands, points, IntPtr.Zero, IntPtr.Zero);
+                        }
                     }
                 }
-                transaction.Commit();
-            }
 
-            foreach(Point3d p in points)
-            {
-                nanoDocumentEditor.WriteMessage($"{p.X} {p.Y} {p.Z}");
+                foreach(SelectedObject selectedObject in selectedObjects)
+                {
+                    Curve? curve = transaction.GetObject(selectedObject.ObjectId, OpenMode.ForWrite) as Curve;
+
+                    DBObjectCollection slicedCurves =  curve!.GetSplitCurves(points);
+
+                    BlockTableRecord blockTableRecord = (BlockTableRecord)transaction.GetObject(nanoDatabase.CurrentSpaceId, OpenMode.ForWrite);
+
+                    foreach(DBObject slicedCurve in slicedCurves)
+                    {
+                        Entity entity = (Entity)slicedCurve;
+
+                        blockTableRecord.AppendEntity(entity);
+                        transaction.AddNewlyCreatedDBObject(entity, true);
+                    }
+                    curve.Erase(true);
+                }
+                transaction.Commit();
             }
         }
     }
