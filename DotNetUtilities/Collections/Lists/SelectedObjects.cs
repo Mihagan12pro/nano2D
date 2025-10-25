@@ -5,15 +5,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Utilities.Collections.Lists
+namespace DotNetUtilities.Collections.Lists
 {
     public class SelectedObjects : List<SelectedObject>
     {
-        public SelectedObjects(PromptSelectionResult result)
+        public SelectedObjects(PromptSelectionResult promptSelectionResult)
         {
-            for (int i = 0; i < result.Value.Count; i++)
+            for (int i = 0; i < promptSelectionResult.Value.Count; i++)
             {
-                Add(result.Value[i]);
+                Add(promptSelectionResult.Value[i]);
             }
         }
     }

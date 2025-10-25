@@ -8,9 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GeometryJoiner\GeometryJoiner.csproj">
-      <Private>True</Private>
-    </ProjectReference>
+    <ProjectReference Include="..\DotNetApps\DotNetApps.csproj" />
   </ItemGroup>
 
   <ItemGroup>

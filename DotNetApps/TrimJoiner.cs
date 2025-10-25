@@ -1,17 +1,14 @@
-﻿using BaseClasses;
+﻿using DotNetApps;
+using DotNetUtilities.Collections.Lists;
 using HostMgd.EditorInput;
-using System.Drawing;
 using System.Reflection;
-using System.Runtime.ConstrainedExecution;
-using System.Security.Cryptography;
 using Teigha.DatabaseServices;
 using Teigha.Geometry;
 using Teigha.Runtime;
-using Utilities.Collections.Lists;
 
 namespace GeometryJoiner
 {
-    public class TrimJoiner : BaseUtility
+    public class TrimJoiner : BaseDotNetApp
     {
 
         public void TrimAndJoin()
@@ -54,25 +51,55 @@ namespace GeometryJoiner
                     }
                 }
 
+                foreach(Point3d point in points)
+                {
+                    nanoDocumentEditor.WriteMessage($"{point.X} {point.Y} {point.Z}");
+                }
+
+                List<Curve> curves = new List<Curve>();
+                List<DBObjectCollection> dbCollection = new List<DBObjectCollection>();
                 foreach(SelectedObject selectedObject in selectedObjects)
                 {
                     Curve? curve = transaction.GetObject(selectedObject.ObjectId, OpenMode.ForWrite) as Curve;
 
-                    DBObjectCollection slicedCurves =  curve!.GetSplitCurves(points);
+                    dbCollection.Add(curve!.GetSplitCurves(points));
 
-                    BlockTableRecord blockTableRecord = (BlockTableRecord)transaction.GetObject(nanoDatabase.CurrentSpaceId, OpenMode.ForWrite);
+                    //BlockTableRecord blockTableRecord = (BlockTableRecord)transaction.GetObject(nanoDatabase.CurrentSpaceId, OpenMode.ForWrite);
 
-                    foreach(DBObject slicedCurve in slicedCurves)
+                    curve.Erase(true);
+
+                    //foreach (DBObject slicedCurve in slicedCurves)
+                    //{
+                    //    Entity entity = (Entity)slicedCurve;
+
+                    //    blockTableRecord.AppendEntity(entity);
+                    //    transaction.AddNewlyCreatedDBObject(entity, true);
+
+                    //    curves.Add((Curve)entity);
+                    //}
+                }
+
+                BlockTableRecord blockTableRecord = (BlockTableRecord)transaction.GetObject(nanoDatabase.CurrentSpaceId, OpenMode.ForWrite);
+                foreach (DBObjectCollection objects in dbCollection)
+                {
+                    foreach(DBObject obj in objects)
                     {
-                        Entity entity = (Entity)slicedCurve;
+                        Entity entity = (Entity)obj;
 
                         blockTableRecord.AppendEntity(entity);
                         transaction.AddNewlyCreatedDBObject(entity, true);
                     }
-                    curve.Erase(true);
                 }
+
                 transaction.Commit();
             }
+
+            filters = new SelectionFilter(typedValues.ToArray());
+
+
+            selectionResult = nanoDocumentEditor.GetSelection(filters);
+
+            selectedObjects = new SelectedObjects(selectionResult);
         }
     }
 }

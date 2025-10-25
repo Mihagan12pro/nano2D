@@ -1,4 +1,5 @@
-﻿using Teigha.Runtime;
+﻿using GeometryJoiner;
+using Teigha.Runtime;
 
 namespace Program
 {
@@ -7,7 +8,7 @@ namespace Program
         [CommandMethod("TrimAndJoin")]
         public static void TrimAndJoin()
         {
-            using (GeometryJoiner.TrimJoiner joiner = new GeometryJoiner.TrimJoiner())
+            using (TrimJoiner joiner = new TrimJoiner())
             {
                 joiner.TrimAndJoin();
             }
