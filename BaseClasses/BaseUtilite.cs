@@ -12,30 +12,40 @@ namespace BaseClasses
 
         protected readonly Database nanoDatabase;
 
-        protected bool CheckInputEntity(object promptObject, Type type)
+        public bool CheckInputEntity(object promptObject, Type type)
         {
-            return (promptObject.GetType().BaseType == type);
+            return (promptObject.GetType().BaseType == type || promptObject.GetType() == type);
         }
 
 
-        protected Entity GetInputEntity(PromptEntityResult promptResult)
+        public Entity GetInputEntity(ObjectId id)
         {
-            if (promptResult.Status == PromptStatus.OK)
+            using (Transaction transaction = nanoDatabase.TransactionManager.StartTransaction())
             {
-                using (Transaction transaction = nanoDatabase.TransactionManager.StartTransaction())
-                {
-                    ObjectId id = promptResult.ObjectId;
 
-                    Entity? entity = transaction.GetObject(id, OpenMode.ForRead) as Entity;
+                Entity? entity = transaction.GetObject(id, OpenMode.ForRead) as Entity;
 
-                    transaction.Commit();
+                transaction.Commit();
 
-                    return entity!;
-                }
+                return entity!;
             }
-
-            throw new NullReferenceException();
         }
+
+
+        public Entity GetInputEntity(PromptSelectionResult promptResult)
+        {
+            return GetInputEntity(promptResult);
+        }
+
+
+        public Entity GetInputEntity(SelectedObject selectedObject)
+        {
+            return GetInputEntity(selectedObject.ObjectId);
+        }
+
+
+        //PromptSelectionResult
+
 
         public void Dispose()
         {
